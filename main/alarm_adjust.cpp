@@ -6,7 +6,7 @@ const int MIN_ALARM_INTERVAL = 30; // 최소 알람 간격 (분)
 const int MAX_ALARM_INTERVAL = 1440; // 최대 알람 간격 (24시간 = 1440분)
 
 int alarmIntervalInMinutes = MIN_ALARM_INTERVAL;
-bool isTimerAdjustMode = false;
+bool isTimerAdjustMode = false; // 타이머 조절 모드 상태
 
 void setupAlarmAdjust() {
     // 필요시 초기화 작업 추가

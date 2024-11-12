@@ -9,7 +9,6 @@ unsigned long lastAlarmTime = 0; // 다음 알람 시간 계산을 위해서 마
 
 bool isAlarmActive = false; // 버튼으로 알람을 끄기 위해 알람이 켜져 있는지 확인
 bool isSleepMode = false; // sleep 모드 여부 확인
-bool isTimerAdjustMode = false; // 타이머 조절 모드 상태
 
 void setup() {
     Serial.begin(115200);
