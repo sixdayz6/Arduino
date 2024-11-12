@@ -1,6 +1,8 @@
 #ifndef ALARM_ADJUST_H
 #define ALARM_ADJUST_H
 
+extern bool isTimerAdjustMode;
+
 // 알람 간격 관련 함수 선언
 void setupAlarmAdjust();
 void enableTimerAdjustMode();

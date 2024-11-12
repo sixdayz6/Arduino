@@ -1,30 +1,21 @@
-//블루투스 라이브러리
-#include <BluetoothSerial.h>
+#include <Adafruit_NeoPixel.h>
 
-BluetoothSerial SerialBT; // Bluetooth 시리얼 객체 생성, setup, loop에서 모두 사용 가능한 변수
+#define LED_PIN 15      // DATA 핀이 연결된 GPIO 핀
+#define NUM_LEDS 12     // LED의 개수 설정
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
 void setup() {
-  Serial.begin(115200); // 통신속도 115200으로 설정
-  SerialBT.begin("ESP32_Test"); // Bluetooth 장치 이름 설정
-
-  Serial.println("Bluetooth is ready. Waiting for input..."); // 연결이 Serial 기능이 작동하는지 확인하기 위한 메세지
-
-
+  strip.begin();
+  strip.show(); // LED 초기화
 }
 
 void loop() {
-  if (SerialBT.available()) { // Bluetooth 입력 데이터가 있으면
-        String input = SerialBT.readStringUntil('\n'); // 입력된 문자열 읽기
-        input.trim(); // 앞뒤 공백 제거
-
-        // 숫자인지 확인 후 시리얼 모니터에 출력
-        if (input.toInt() != 0 || input == "0") {
-            Serial.println("Received number: " + input);
-            SerialBT.println("Echo: " + input); // Bluetooth로 다시 응답 전송 (옵션)
-        } else {
-            Serial.println("Invalid input (not a number): " + input);
-        }
-    }
-
+  for(int i=0; i < NUM_LEDS; i++) {
+    strip.setPixelColor(i, strip.Color(255, 0, 0, 0)); // 빨간색
+    strip.show();
+    delay(100);
+    strip.setPixelColor(i, strip.Color(0, 0, 0, 0)); // 꺼짐
+    strip.show();
+  }
 }

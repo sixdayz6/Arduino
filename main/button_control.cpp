@@ -1,7 +1,6 @@
 #include "button_control.h"
 #include <Arduino.h>
 
-// 버튼 핀 번호 설정
 const int plusButtonPin = 32;
 const int minusButtonPin = 33;
 

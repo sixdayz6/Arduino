@@ -80,3 +80,4 @@ void stopAlarm() {
     deactivateAlarmLEDStrip();
     Serial.println("알람이 종료되었습니다.");
 }
+

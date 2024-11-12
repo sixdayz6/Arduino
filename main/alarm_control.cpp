@@ -38,6 +38,8 @@ void playMelody() {
     }
 }
 
+
+
 void activateVibrationMotor() {
     digitalWrite(VIBRATION_PIN, HIGH);
 }
