@@ -14,6 +14,9 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
+      // 연결이 끊기면 다시 광고 시작
+      pServer->startAdvertising();
+      Serial.println("Advertising restarted for reconnection");
     }
 };
 
@@ -42,8 +45,16 @@ void setup() {
   pService->start();
 
   // 광고 시작
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting for a client connection...");
+  // pServer->getAdvertising()->start();
+  // Serial.println("Waiting for a client connection...");
+
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(BLEUUID("12345678-1234-5678-1234-56789abcdef0"));
+  pAdvertising->setScanResponse(true);
+  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+  pAdvertising->setMinPreferred(0x12);
+  BLEDevice::startAdvertising();
+  Serial.println("Characteristic defined! Now you can read it in your phone!");
 }
 
 void loop() {

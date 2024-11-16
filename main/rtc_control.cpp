@@ -3,7 +3,7 @@
 RTC_DS3231 rtc;
 int alarmHour = 0;
 int alarmMinute = 0;
-int alarmCount = 0; // 알람 횟수 변수
+int alarmCount = 0; // 알람 횟수 변수 정의
 
 void setupRTC() {
     if (!rtc.begin()) {
@@ -20,7 +20,7 @@ void setupRTC() {
 bool checkAlarmTime() {
     DateTime now = rtc.now();
     if (now.hour() == alarmHour && now.minute() == alarmMinute && now.second() == 0) {
-        alarmCount++; // 알람 횟수 증가
+        alarmCount++; // 알람이 울릴 때마다 횟수 증가
         return true;
     }
     return false;
