@@ -8,7 +8,7 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
-BLEServer *bleServer = nullptr;
+BLEServer *testBleServer = nullptr;
 bool bleDeviceConnected = false;
 unsigned long bleStartTime = 0;
 
@@ -18,12 +18,12 @@ unsigned long bleStartTime = 0;
 
 // BLE 콜백 클래스
 class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer *server) override {
+    void onConnect(BLEServer *testBleServer) override {
         bleDeviceConnected = true;
         Serial.println("Device connected.");
     }
 
-    void onDisconnect(BLEServer *server) override {
+    void onDisconnect(BLEServer *testBleServer) override {
         bleDeviceConnected = false;
         Serial.println("Device disconnected.");
     }
@@ -31,10 +31,10 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 void initBLEForTest() {
     BLEDevice::init("ESP32_Alarm_Test");
-    bleServer = BLEDevice::createServer();
-    bleServer->setCallbacks(new MyServerCallbacks());
+    testBleServer = BLEDevice::createServer();
+    testBleServer->setCallbacks(new MyServerCallbacks());
 
-    BLEService *service = bleServer->createService(SERVICE_UUID);
+    BLEService *service = testBleServer->createService(SERVICE_UUID);
 
     BLECharacteristic *txCharacteristic = service->createCharacteristic(
         CHARACTERISTIC_UUID_TX,
@@ -50,8 +50,13 @@ void initBLEForTest() {
     advertising->start();
 
     Serial.println("BLE Advertising started.");
+    String btMacAddress = BLEDevice::getAddress().toString().c_str();
+    Serial.println("Bluetooth MAC Address:");
+    Serial.println(btMacAddress);
+
     bleStartTime = millis();
 }
+
 
 
 // 테스트 메뉴 출력
@@ -127,19 +132,21 @@ void testAlarmInterval() {
     Serial.println("Alarm test complete and reset.");
 }
 
+
 // 4. 블루투스 연결 테스트
 void testBluetooth() {
     Serial.println("Press Button 1 to start Bluetooth advertising...");
 
-    // 1분 타이머 설정
-    unsigned long timeout = 60000; // 1분
+    bool advertisingStarted = false; // 광고 시작 여부 플래그
+    unsigned long timeout = 60000;  // 1분 타이머 설정
+    unsigned long startTime = millis();
 
-    while (millis() - bleStartTime < timeout) {
+    while (millis() - startTime < timeout) {
         checkButtons(); // 버튼 상태 확인
 
-        if (digitalRead(12) == LOW) {
-            initBLEForTest();
-            break;
+        if (!advertisingStarted && digitalRead(12) == LOW) { // 버튼 눌림 확인
+            initBLEForTest(); // 광고 시작
+            advertisingStarted = true;
         }
 
         if (bleDeviceConnected) {
@@ -155,3 +162,4 @@ void testBluetooth() {
         Serial.println("No device connected within 1 minute. Test timed out.");
     }
 }
+
