@@ -16,6 +16,7 @@ struct Alarm {
     uint32_t interval;    // 알람 간격 (분)
     uint32_t nextTrigger; // 다음 알람 시간 (Unix timestamp)
 };
+
 extern Alarm currentAlarm; // 현재 알람 데이터
 
 #endif // CONFIG_H

@@ -2,6 +2,7 @@
 #define ALARM_H
 
 #include <Arduino.h>
+#include <RTClib.h>
 
 // 함수 선언
 void loadAlarms();          // 알람 불러오기
