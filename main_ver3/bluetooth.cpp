@@ -36,63 +36,43 @@ class MyServerCallbacks : public BLEServerCallbacks {
 // Callback for receiving data
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-        String receivedData = pCharacteristic->getValue();
+        // Get the received data
+        String receivedData = pCharacteristic->getValue().c_str();
+
         if (!receivedData.isEmpty()) {
-            String command = String(receivedData.c_str()); // Convert to Arduino String
-            Serial.println("Received data via BLE: " + command);
+            Serial.println("Received data via BLE: " + receivedData);
 
-            // Handle received commands
-            if (command == "SET_ALARM") {
-                currentAlarm.interval = 30; // Example: Set alarm for 30 minutes
-                startCountdown();
-                notifyBLE("Alarm set for 30 minutes");
-            } else if (command == "GET_ALARM") {
-                String message = "Next alarm in " + String(currentAlarm.interval) + " minutes.";
-                notifyBLE(message);
-            } else if (command == "CLEAR_ALARM") {
-                resetAlarms();
-                notifyBLE("All alarms cleared");
-            } else {
-                notifyBLE("Unknown command");
+            // Try to parse the input as an integer
+            bool isInteger = true;
+            for (size_t i = 0; i < receivedData.length(); i++) {
+                if (!isdigit(receivedData[i])) {
+                    isInteger = false;
+                    break;
+                }
             }
 
-            // 수신 데이터 구문 분석
-        int separatorIndex = command.indexOf(':');
-        if (separatorIndex == -1) {
-            Serial.println("Invalid command format.");
-            return;
-        }
-
-        // 명령어와 값 분리
-        String cmd = command.substring(0, separatorIndex);
-        String arg = command.substring(separatorIndex + 1);
-
-        // 명령어 처리
-        if (cmd == "SET_INTERVAL") {
-            int alarmInterval = arg.toInt();
-            if (alarmInterval >= 30 && alarmInterval <= 1440) {
-                currentAlarm.interval = alarmInterval;
-                startCountdown();
-                Serial.printf("Alarm interval updated to %d minutes.\n", alarmInterval);
+            if (isInteger) {
+                // Handle integer input: Set alarm interval
+                int alarmInterval = receivedData.toInt();
+                if (alarmInterval >= 30 && alarmInterval <= 1440) {
+                    currentAlarm.interval = alarmInterval;
+                    startCountdown();
+                    Serial.printf("Alarm interval updated to %d minutes.\n", alarmInterval);
+                    notifyBLE("Alarm interval set to " + String(alarmInterval) + " minutes.");
+                } else {
+                    Serial.println("Invalid interval. Must be between 30 and 1440 minutes.");
+                    notifyBLE("Invalid interval. Must be between 30 and 1440 minutes.");
+                }
             } else {
-                Serial.println("Invalid interval. Must be between 30 and 1440 minutes.");
+                // Handle string input: Store the string in a characteristic and print it
+                pCharacteristic->setValue(receivedData.c_str());
+                Serial.println("Stored string in characteristic: " + receivedData);
+                notifyBLE("Received string: " + receivedData);
             }
-        } else if (cmd == "SET_TONE") {
-            int toneFrequency = arg.toInt();
-            if (toneFrequency > 0) {
-                setSpeakerTone(toneFrequency);
-                Serial.printf("Speaker tone set to %d Hz.\n", toneFrequency);
-            } else {
-                Serial.println("Invalid tone frequency.");
-            }
-        } else {
-            Serial.println("Unknown command.");
-        }
-
-
         }
     }
 };
+
 
 // Initialize BLE
 void initBluetooth() {
@@ -124,6 +104,13 @@ void initBluetooth() {
     // Start advertising
     pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
+
+    // Set advertising data compatible with iOS
+    BLEAdvertisementData advertisementData;
+    advertisementData.setFlags(0x06); // General discoverable mode, BR/EDR not supported
+    advertisementData.setName("ESP32 Alarm");
+    pAdvertising->setAdvertisementData(advertisementData);
+
     pAdvertising->start();
     Serial.println("BLE initialized and advertising");
     String btMacAddress = BLEDevice::getAddress().toString().c_str();

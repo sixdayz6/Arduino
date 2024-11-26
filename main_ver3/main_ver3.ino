@@ -12,7 +12,7 @@ void setup() {
     Serial.begin(115200);
 
     // 모듈 초기화
-    initRTC();      // RTC 모듈 초기화
+    // initRTC();      // RTC 모듈 초기화
     initBluetooth();      // BLE 초기화
     initButtons();  // 버튼 핸들러 초기화
     initOutput();   // 출력 디바이스 초기화
