@@ -2,10 +2,10 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <Preferences.h>
 #include "Alarm.h"
 #include "rtc.h"
 #include "config.h"
-#include "output.h"
 
 // UUIDs for BLE Service and Characteristics
 #define SERVICE_UUID "12345678-1234-1234-1234-123456789012"
@@ -13,48 +13,79 @@
 #define CHARACTERISTIC_UUID_TX "87654321-4321-4321-4321-210987654322" // Transmit data
 
 BLEServer *pServer = nullptr;
-BLECharacteristic *pTxCharacteristic = nullptr; // TX characteristic (ESP32 -> App)
-BLECharacteristic *pRxCharacteristic = nullptr; // RX characteristic (App -> ESP32)
+BLECharacteristic *pTxCharacteristic = nullptr; // TX (ESP32 -> Client)
+BLECharacteristic *pRxCharacteristic = nullptr; // RX (Client -> ESP32)
 BLEAdvertising *pAdvertising = nullptr;
 
+Preferences preferences;
+
 bool deviceConnected = false;
+std::string previousDeviceAddress = ""; // Store the last connected device's MAC address
+unsigned long advertisingStartTime = 0;
+
+// Save last device address to persistent storage
+void saveLastDeviceAddress(const std::string &address) {
+    preferences.begin("BLEPrefs", false);
+    preferences.putString("lastDevice", address.c_str());
+    preferences.end();
+}
+
+// Load last device address from persistent storage
+std::string loadLastDeviceAddress() {
+    preferences.begin("BLEPrefs", true);
+    std::string address = preferences.getString("lastDevice", "").c_str();
+    preferences.end();
+    return address;
+}
 
 // Callback for connection events
 class MyServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer *pServer) {
+    void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
+        // Retrieve the MAC address of the connecting device
+        char currentDeviceAddress[18];
+        sprintf(currentDeviceAddress, "%02X:%02X:%02X:%02X:%02X:%02X",
+                param->connect.remote_bda[0], param->connect.remote_bda[1], param->connect.remote_bda[2],
+                param->connect.remote_bda[3], param->connect.remote_bda[4], param->connect.remote_bda[5]);
+
+        Serial.println("Device connected: " + String(currentDeviceAddress));
+
+        // Save the MAC address if it's a new connection
+        if (previousDeviceAddress.empty() || previousDeviceAddress != currentDeviceAddress) {
+            previousDeviceAddress = currentDeviceAddress;
+            saveLastDeviceAddress(currentDeviceAddress); // Save to persistent storage
+            Serial.println("Saved device address: " + String(currentDeviceAddress));
+        }
+
         deviceConnected = true;
-        Serial.println("Device connected");
     }
 
     void onDisconnect(BLEServer *pServer) {
-        deviceConnected = false;
         Serial.println("Device disconnected");
-        startBLEAdvertising(); // Restart advertising after disconnection
+        deviceConnected = false;
+        startBLEAdvertising(); // Restart advertising for reconnection
     }
 };
 
 // Callback for receiving data
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-        // Get the received data
-        String receivedData = pCharacteristic->getValue().c_str();
+        String receivedData = pCharacteristic->getValue(); // Read the received data
+        Serial.println("Received data: " + String(receivedData.c_str()));
 
+        // Handle mixed data types: integers and strings
         if (!receivedData.isEmpty()) {
-            Serial.println("Received data via BLE: " + receivedData);
-
-            // Try to parse the input as an integer
             bool isInteger = true;
-            for (size_t i = 0; i < receivedData.length(); i++) {
-                if (!isdigit(receivedData[i])) {
+            for (char c : receivedData) {
+                if (!isdigit(c)) {
                     isInteger = false;
                     break;
                 }
             }
 
             if (isInteger) {
-                // Handle integer input: Set alarm interval
-                int alarmInterval = receivedData.toInt();
-                if (alarmInterval >= 30 && alarmInterval <= 1440) {
+                // Handle integer input (e.g., alarm interval)
+                int alarmInterval = atoi(receivedData.c_str());
+                if (alarmInterval >= MIN_ALARM_INTERVAL && alarmInterval <= MAX_ALARM_INTERVAL) {
                     currentAlarm.interval = alarmInterval;
                     startCountdown();
                     Serial.printf("Alarm interval updated to %d minutes.\n", alarmInterval);
@@ -64,64 +95,85 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                     notifyBLE("Invalid interval. Must be between 30 and 1440 minutes.");
                 }
             } else {
-                // Handle string input: Store the string in a characteristic and print it
-                pCharacteristic->setValue(receivedData.c_str());
-                Serial.println("Stored string in characteristic: " + receivedData);
-                notifyBLE("Received string: " + receivedData);
+                // Handle string input
+                String receivedString = String(receivedData.c_str());
+                Serial.println("Received string: " + receivedString);
+                notifyBLE("Received string: " + receivedString);
             }
         }
     }
 };
 
+// Advertising Control
+void startBLEAdvertising() {
+    Serial.println("Starting BLE Advertising...");
+    pAdvertising->start();
+    advertisingStartTime = millis();
+}
+
+void stopBLEAdvertising() {
+    Serial.println("Stopping BLE Advertising...");
+    pAdvertising->stop();
+}
+
+// Reconnect to the previously connected device
+void reconnectToPreviousDevice() {
+    if (!previousDeviceAddress.empty()) {
+        Serial.println("Attempting to reconnect to previous device: " + String(previousDeviceAddress.c_str()));
+
+        // Start advertising for reconnection
+        startBLEAdvertising();
+        unsigned long startTime = millis();
+
+        // Wait for 1 minute to reconnect
+        while (!deviceConnected && millis() - startTime < 60000) {
+            delay(100);
+        }
+
+        if (deviceConnected) {
+            Serial.println("Reconnected to previous device!");
+        } else {
+            Serial.println("Reconnection timeout. Stopping advertising.");
+            stopBLEAdvertising();
+        }
+    } else {
+        Serial.println("No previous device to reconnect to. Starting normal advertising.");
+        startBLEAdvertising();
+    }
+}
 
 // Initialize BLE
 void initBluetooth() {
-    BLEDevice::init("ESP32 Alarm");
+    Serial.println("Initializing Bluetooth...");
+    BLEDevice::init("ESP32 BLE Server");
     pServer = BLEDevice::createServer();
     pServer->setCallbacks(new MyServerCallbacks());
 
     // Create BLE Service
     BLEService *pService = pServer->createService(SERVICE_UUID);
 
-    // Create TX (Notify) Characteristic
+    // Create TX Characteristic
     pTxCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_UUID_TX,
         BLECharacteristic::PROPERTY_NOTIFY
     );
 
-    // Create RX (Write) Characteristic
+    // Create RX Characteristic
     pRxCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_UUID_RX,
         BLECharacteristic::PROPERTY_WRITE
     );
 
-    // Set RX Callback
     pRxCharacteristic->setCallbacks(new MyCallbacks());
-
-    // Start the service
     pService->start();
 
-    // Start advertising
+    // Set up advertising
     pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
 
-    // Set advertising data compatible with iOS
-    BLEAdvertisementData advertisementData;
-    advertisementData.setFlags(0x06); // General discoverable mode, BR/EDR not supported
-    advertisementData.setName("ESP32 Alarm");
-    pAdvertising->setAdvertisementData(advertisementData);
-
-    pAdvertising->start();
-    Serial.println("BLE initialized and advertising");
-    String btMacAddress = BLEDevice::getAddress().toString().c_str();
-    Serial.println("Bluetooth MAC Address:");
-    Serial.println(btMacAddress);
-}
-
-// Process incoming BLE commands
-void processBluetooth() {
-    if (!deviceConnected) return;
-    // Additional logic if needed
+    // Attempt to reconnect to the previous device
+    previousDeviceAddress = loadLastDeviceAddress(); // Load the last connected device address
+    reconnectToPreviousDevice();
 }
 
 // Notify connected BLE device
@@ -130,15 +182,5 @@ void notifyBLE(String message) {
         pTxCharacteristic->setValue(message.c_str());
         pTxCharacteristic->notify();
         Serial.printf("BLE Notification: %s\n", message.c_str());
-    }
-}
-
-// Restart BLE advertising
-void startBLEAdvertising() {
-    if (pAdvertising != nullptr) {
-        pAdvertising->start();
-        Serial.println("BLE Advertising started.");
-    } else {
-        Serial.println("BLE Advertising not initialized.");
     }
 }
