@@ -24,3 +24,10 @@ void deactivateOutput() {
     noTone(SPEAKER_PIN);
     digitalWrite(LEDSTRIP_PIN, LOW);
 }
+
+void setSpeakerTone(int frequency) {
+    tone(SPEAKER_PIN, frequency);
+    delay(500); // 톤 재생 지속 시간
+    noTone(SPEAKER_PIN);
+}
+
