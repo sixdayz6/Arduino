@@ -11,6 +11,7 @@ unsigned long button2PressTime = 0;
 bool button1Pressed = false;
 bool button2Pressed = false;
 bool actionProcessed = false;
+bool bleSearching = false;
 
 void initButtons() {
     pinMode(BUTTON1_PIN, INPUT_PULLUP);
@@ -54,7 +55,7 @@ void checkButtons() {
         // 버튼2 짧게 눌림 처리
         if (!button1Pressed && !actionProcessed) {
             if (millis() - button2PressTime < LONG_PRESS_THRESHOLD) {
-                handleButton2ShortPress();
+                handleButton2ShortPress(); //
             }
         }
         button2Pressed = false;
@@ -64,8 +65,11 @@ void checkButtons() {
     // 버튼2 길게 눌림 처리
     if (button2Pressed && !actionProcessed) {
         if (millis() - button2PressTime > LONG_PRESS_THRESHOLD) {
-            handleButton2LongPress();
+            handleButton2LongPress(); // 알람 종료
             actionProcessed = true; // 길게 눌림 처리 후 추가 실행 방지
+        }
+        else if (millis() - button2PressTime > LONG_PRESS_THRESHOLD * 2) {
+            connectToBLE();
         }
     }
 
@@ -84,33 +88,40 @@ void checkButtons() {
     // }
 }
 
-// 버튼 동작 함수 정의
+// 알람 주기 30분 증가
 void handleButton1ShortPress() {
     adjustAlarmInterval(30);
     Serial.println("Button 1 Short Press: Alarm interval increased by 30 minutes.");
 }
-
+// 알람 시작
 void handleButton1LongPress() {
     startCountdown();
     Serial.println("Button 1 Long Press: Alarm countdown started.");
 }
-
+// 알람 주기 30분 감소
 void handleButton2ShortPress() {
     adjustAlarmInterval(-30);
     Serial.println("Button 2 Short Press: Alarm interval decreased by 30 minutes.");
 }
-
+// 알람 종료
 void handleButton2LongPress() {
     stopCurrentAlarm();
     Serial.println("Button 2 Long Press: Current alarm stopped.");
 }
-
-void handleBothButtonsShortPress() {
-    resetAlarms();
-    Serial.println("Both Buttons Short Press: Alarms reset, all alarms deleted.");
+// 블루투스 연결
+void connectToBLE() {
+  bleSearching = true;
+  startBLEAdvertising();
 }
 
-void handleBothButtonsLongPress() {
-    startBLEAdvertising();
-    Serial.println("Both Buttons Long Press: BLE advertising started.");
-}
+
+
+// void handleBothButtonsShortPress() {
+//     resetAlarms();
+//     Serial.println("Both Buttons Short Press: Alarms reset, all alarms deleted.");
+// }
+
+// void handleBothButtonsLongPress() {
+//     startBLEAdvertising();
+//     Serial.println("Both Buttons Long Press: BLE advertising started.");
+// }

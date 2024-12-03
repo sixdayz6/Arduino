@@ -10,6 +10,7 @@
 
 // 공통 전역 변수
 extern bool alarmActive; // 현재 알람 활성 상태
+extern bool bleSearching; // 블루투스 찾는 중 플래그
 
 // 공통 구조체
 struct Alarm {

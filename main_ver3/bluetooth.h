@@ -8,5 +8,6 @@ void initBluetooth();             // BLE 초기화
 void notifyBLE(String message); // BLE 메시지 전송
 void startBLEAdvertising(); // BLE 광고 시작
 void processBluetooth(); // 블루투스 기능 실행
+void connectToBLE(); // 버튼으로 블루투스 광고 시작
 
 #endif // BLUETOOTH_H
