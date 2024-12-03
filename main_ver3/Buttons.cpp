@@ -70,18 +70,18 @@ void checkButtons() {
     }
 
     // 두 버튼 동시에 눌림 처리
-    if (button1Pressed && button2Pressed) {
-        if (!actionProcessed) {
-            if (millis() - button1PressTime > LONG_PRESS_THRESHOLD &&
-                millis() - button2PressTime > LONG_PRESS_THRESHOLD) {
-                handleBothButtonsLongPress();
-            } else if (millis() - button1PressTime < LONG_PRESS_THRESHOLD &&
-                       millis() - button2PressTime < LONG_PRESS_THRESHOLD) {
-                handleBothButtonsShortPress();
-            }
-            actionProcessed = true; // 두 버튼 동작 처리 후 추가 실행 방지
-        }
-    }
+    // if (button1Pressed && button2Pressed) {
+    //     if (!actionProcessed) {
+    //         if (millis() - button1PressTime > LONG_PRESS_THRESHOLD &&
+    //             millis() - button2PressTime > LONG_PRESS_THRESHOLD) {
+    //             handleBothButtonsLongPress();
+    //         } else if (millis() - button1PressTime < LONG_PRESS_THRESHOLD &&
+    //                    millis() - button2PressTime < LONG_PRESS_THRESHOLD) {
+    //             handleBothButtonsShortPress();
+    //         }
+    //         actionProcessed = true; // 두 버튼 동작 처리 후 추가 실행 방지
+    //     }
+    // }
 }
 
 // 버튼 동작 함수 정의

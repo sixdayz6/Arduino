@@ -1,7 +1,13 @@
 #include "output.h"
+#include <Adafruit_NeoPixel.h>
+
 
 #define SPEAKER_PIN 25
 #define LEDSTRIP_PIN 27
+#define NUM_LEDS 24
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIP_PIN, NEO_GRBW + NEO_KHZ800);
+
 
 void initOutput() {
     pinMode(SPEAKER_PIN, OUTPUT);

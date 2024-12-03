@@ -3,20 +3,30 @@
 #include "rtc.h"
 #include "output.h"
 #include "bluetooth.h"
+#include <Preferences.h>
 
 Alarm currentAlarm = {60, 0}; // 초기값: 간격 60분, 트리거 없음
 
+Preferences alarm_preferences; // Create a Preferences instance
+
 void loadAlarms() {
-    // EEPROM이나 SPIFFS에서 저장된 알람 읽기 (가상 코드)
-    // 현재는 초기값 설정
-    currentAlarm.interval = 60;
-    currentAlarm.nextTrigger = 0;
-    Serial.println("Alarms loaded.");
+    alarm_preferences.begin("AlarmPrefs", true); // Open alarm_preferences in read-only mode
+    currentAlarm.interval = alarm_preferences.getInt("interval", 60); // Default interval: 60 minutes
+    currentAlarm.nextTrigger = alarm_preferences.getUInt("nextTrigger", 0); // Default next trigger: 0
+    alarm_preferences.end();
+
+    Serial.printf("Alarms loaded. Interval: %d minutes, Next Trigger: %d\n",
+                  currentAlarm.interval, currentAlarm.nextTrigger);
 }
 
 void saveAlarms() {
-    // EEPROM이나 SPIFFS에 알람 저장 (가상 코드)
-    Serial.println("Alarms saved.");
+    alarm_preferences.begin("AlarmPrefs", false); // Open alarm_preferences in write mode
+    alarm_preferences.putInt("interval", currentAlarm.interval);
+    alarm_preferences.putUInt("nextTrigger", currentAlarm.nextTrigger);
+    alarm_preferences.end();
+
+    Serial.printf("Alarms saved. Interval: %d minutes, Next Trigger: %d\n",
+                  currentAlarm.interval, currentAlarm.nextTrigger);
 }
 
 void adjustAlarmInterval(int32_t delta) {
