@@ -54,11 +54,11 @@ void activateOutput() {
             delay(500);
 
             if (!alarmActive) {
+                deactivateOutput();
                 break; // Check again for stop signal
             }
         }
     }
-
     deactivateOutput();
 }
 
