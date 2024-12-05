@@ -5,7 +5,7 @@
 
 // 공통 상수
 #define LONG_PRESS_THRESHOLD 2000 // 2초 이상은 길게 누름
-#define MIN_ALARM_INTERVAL 30     // 최소 알람 간격 (분)
+#define MIN_ALARM_INTERVAL 1     // 최소 알람 간격 (분)
 #define MAX_ALARM_INTERVAL 1440   // 최대 알람 간격 (분)
 
 // 공통 전역 변수

@@ -2,6 +2,7 @@
 #include "alarm.h"
 #include "bluetooth.h"
 #include "config.h"
+#include "output.h"
 
 #define BUTTON1_PIN 12
 #define BUTTON2_PIN 14
@@ -105,13 +106,14 @@ void handleButton2ShortPress() {
 }
 // 알람 종료
 void handleButton2LongPress() {
-    stopCurrentAlarm();
+    deactivateOutput();
     Serial.println("Button 2 Long Press: Current alarm stopped.");
 }
 // 블루투스 연결
 void connectToBLE() {
   bleSearching = true;
   startBLEAdvertising();
+  searchingBluethoot();
 }
 
 

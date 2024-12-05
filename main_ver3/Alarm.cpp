@@ -53,17 +53,19 @@ void checkAlarms() {
 
 void triggerAlarm() {
     Serial.println("Alarm Triggered!");
+    notifyBLE("Alarm Activated");
     alarmActive = true;
     activateOutput();       // 스피커, LED 등 알림 활성화
-    notifyBLE("Alarm Activated");
 }
 
 void stopCurrentAlarm() {
-    if (alarmActive) {
-        deactivateOutput(); // 알림 비활성화
-        alarmActive = false;
-        startCountdown();   // 다음 알람 카운트다운 시작
-    }
+    // if (alarmActive) {
+    //     deactivateOutput(); // 알림 비활성화
+    //     alarmActive = false;
+    //     startCountdown();   // 다음 알람 카운트다운 시작
+    // }
+    deactivateOutput(); // 알림 비활성화
+    alarmActive = false;
 }
 
 void resetAlarms() {

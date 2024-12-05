@@ -3,6 +3,7 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <Preferences.h>
+#include <base64.h> // Include the Base64 library
 #include "Alarm.h"
 #include "rtc.h"
 #include "config.h"
@@ -57,6 +58,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
         }
 
         deviceConnected = true;
+        bleSearching = false;
     }
 
     void onDisconnect(BLEServer *pServer) {
@@ -70,6 +72,7 @@ class MyServerCallbacks : public BLEServerCallbacks {
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
         String receivedData = pCharacteristic->getValue(); // Read the received data
+        // receivedData = decodeBase64Data(pCharacteristic->getValue());
         Serial.println("Received data: " + String(receivedData.c_str()));
 
         // Handle mixed data types: integers and strings
@@ -184,3 +187,36 @@ void notifyBLE(String message) {
         Serial.printf("BLE Notification: %s\n", message.c_str());
     }
 }
+
+// void decodeBase64Data(const String& base64Input) {
+//     // Buffer to store decoded data
+//     size_t decodedLen = base64_dec_len(base64Input.c_str(), base64Input.length());
+//     char decodedData[decodedLen]; // Allocate memory for decoded output
+
+//     // Decode Base64 input
+//     base64_decode(decodedData, base64Input.c_str(), base64Input.length());
+
+//     // Output the raw data
+//     Serial.println("Decoded Data (Raw):");
+//     for (size_t i = 0; i < decodedLen; i++) {
+//         Serial.printf("0x%02X ", (uint8_t)decodedData[i]);
+//     }
+//     Serial.println();
+
+//     // If decoded data is printable, output as a string
+//     if (isPrintable(decodedData, decodedLen)) {
+//         Serial.println("Decoded String:");
+//         Serial.println(decodedData);
+//     }
+// }
+
+// // Helper function to check if data is printable
+// bool isPrintable(const char* data, size_t length) {
+//     for (size_t i = 0; i < length; i++) {
+//         if (!isprint(data[i])) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+

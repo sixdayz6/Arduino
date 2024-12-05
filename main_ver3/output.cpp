@@ -1,10 +1,16 @@
 #include "output.h"
 #include "config.h"
+#include "alarm.h"
 #include <Adafruit_NeoPixel.h>
 
 
 #define SPEAKER_PIN 25
 #define LEDSTRIP_PIN 27
+#define VIBRATION_MOTOR_PIN 4  // Use any PWM-capable GPIO pin
+#define PWM_CHANNEL 0           // LEDC PWM channel (0-15)
+#define PWM_FREQ 5000           // PWM frequency (in Hz)
+#define PWM_RESOLUTION 8        // PWM resolution (8 bits: 0-255 duty cycle)
+
 #define NUM_LEDS 24
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIP_PIN, NEO_GRBW + NEO_KHZ800);
@@ -16,6 +22,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIP_PIN, NEO_GRBW + N
 void initOutput() {
     pinMode(SPEAKER_PIN, OUTPUT);
     pinMode(LEDSTRIP_PIN, OUTPUT);
+
+    // // Configure the PWM channel
+    // ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
+    // ledcAttachPin(VIBRATION_MOTOR_PIN, PWM_CHANNEL);
+
     deactivateOutput();
     Serial.println("Output Initialized.");
 }
@@ -39,6 +50,7 @@ void activateOutput() {
             strip.fill(colors[i], 0, NUM_LEDS);
             strip.show();
             tone(SPEAKER_PIN, 1000, 500); // Play sound for 500ms
+            // longBuzz();
             delay(500);
 
             if (!alarmActive) {
@@ -52,10 +64,11 @@ void activateOutput() {
 
 void deactivateOutput() {
     if (!alarmActive) return; // Do nothing if the alarm is not active
+    alarmActive = false;
     noTone(SPEAKER_PIN);
     strip.clear(); // Clear all LEDs
     strip.show();
-    alarmActive = false;
+    startCountdown();
     Serial.println("Output Deactivated.");
 }
 
@@ -95,4 +108,18 @@ void searchingBluethoot() {
     }
   }
 }
+
+// void shortBuzz() {
+//     ledcWrite(PWM_CHANNEL, 200); // Medium intensity
+//     delay(200);                  // Vibrate for 200ms
+//     ledcWrite(PWM_CHANNEL, 0);   // Turn off
+//     delay(100);                  // Pause
+// }
+
+// void longBuzz() {
+//     ledcWrite(PWM_CHANNEL, 255); // Full intensity
+//     delay(500);                  // Vibrate for 500ms
+//     ledcWrite(PWM_CHANNEL, 0);   // Turn off
+// }
+
 
