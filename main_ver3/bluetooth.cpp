@@ -111,6 +111,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 void startBLEAdvertising() {
     Serial.println("Starting BLE Advertising...");
     pAdvertising->start();
+    
     advertisingStartTime = millis();
 }
 
@@ -142,6 +143,20 @@ void reconnectToPreviousDevice() {
     } else {
         Serial.println("No previous device to reconnect to. Starting normal advertising.");
         startBLEAdvertising();
+
+        unsigned long startTime = millis();
+
+        // Wait for 1 minute to reconnect
+        while (!deviceConnected && millis() - startTime < 60000) {
+            delay(100);
+        }
+
+        if (deviceConnected) {
+            Serial.println("Reconnected to previous device!");
+        } else {
+            Serial.println("Reconnection timeout. Stopping advertising.");
+            stopBLEAdvertising();
+        }
     }
 }
 

@@ -41,7 +41,7 @@ void activateOutput() {
     };
 
     unsigned long startTime = millis();
-    while (millis() - startTime < 30000) { // Run for 30 seconds
+    while (millis() - startTime < 10000) { // Run for 30 seconds
         if (!alarmActive) {
             break; // Stop the alarm if requested
         }
@@ -107,6 +107,20 @@ void searchingBluethoot() {
 
     }
   }
+}
+
+void blue_button1_led() {
+  strip.fill(strip.Color(0, 0, 255), 0, NUM_LEDS);
+  strip.show();
+  delay(100);
+  strip.clear();
+}
+
+void red_button2_led() {
+  strip.fill(strip.Color(255, 0, 0), 0, NUM_LEDS);
+  strip.show();
+  delay(100);
+  strip.clear();
 }
 
 // void shortBuzz() {

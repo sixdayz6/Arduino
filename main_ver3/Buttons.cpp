@@ -29,11 +29,13 @@ void checkButtons() {
     if (currentButton1State && !button1Pressed) {
         button1PressTime = millis();
         button1Pressed = true;
+        blue_button1_led();
     } else if (!currentButton1State && button1Pressed) {
         // 버튼1 짧게 눌림 처리
         if (!button2Pressed && !actionProcessed) {
             if (millis() - button1PressTime < LONG_PRESS_THRESHOLD) {
                 handleButton1ShortPress();
+                
             }
         }
         button1Pressed = false;
@@ -52,6 +54,7 @@ void checkButtons() {
     if (currentButton2State && !button2Pressed) {
         button2PressTime = millis();
         button2Pressed = true;
+        red_button2_led();
     } else if (!currentButton2State && button2Pressed) {
         // 버튼2 짧게 눌림 처리
         if (!button1Pressed && !actionProcessed) {
@@ -68,9 +71,6 @@ void checkButtons() {
         if (millis() - button2PressTime > LONG_PRESS_THRESHOLD) {
             handleButton2LongPress(); // 알람 종료
             actionProcessed = true; // 길게 눌림 처리 후 추가 실행 방지
-        }
-        else if (millis() - button2PressTime > LONG_PRESS_THRESHOLD * 2) {
-            connectToBLE();
         }
     }
 
