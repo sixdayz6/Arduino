@@ -11,7 +11,7 @@
 #define PWM_FREQ 5000           // PWM frequency (in Hz)
 #define PWM_RESOLUTION 8        // PWM resolution (8 bits: 0-255 duty cycle)
 
-#define NUM_LEDS 24
+#define NUM_LEDS 48
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LEDSTRIP_PIN, NEO_GRBW + NEO_KHZ800);
 
