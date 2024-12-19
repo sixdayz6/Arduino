@@ -6,9 +6,9 @@
 // 함수 선언
 void initButtons();       // 버튼 초기화
 void checkButtons();      // 버튼 상태 확인
+void turnOffButton();
 
 // 버튼 이벤트 핸들러 선언
-void resetButtonStates();
 void handleButton1ShortPress();
 void handleButton1LongPress();
 void handleButton2ShortPress();
